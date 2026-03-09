@@ -1,7 +1,7 @@
 {
   "name": "claude-hist",
-  "version": "1.0.0",
-  "description": "Interactive Claude Code session browser — search, preview and resume any past session",
+  "version": "1.0.1",
+  "description": "Interactive terminal session browser — search, preview and resume any past session instantly",
   "bin": {
     "chist": "bin/cresume.js"
   },
@@ -17,5 +17,14 @@
     "cli",
     "tui"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Swastik2000/claude-hist.git"
+  },
+  "homepage": "https://github.com/Swastik2000/claude-hist#readme",
+  "bugs": {
+    "url": "https://github.com/Swastik2000/claude-hist/issues"
+  },
+  "author": "Swastik2000"
 }
