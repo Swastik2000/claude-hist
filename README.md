@@ -59,7 +59,7 @@ npx claude-hist
 | `f` | Star / unstar a session (persisted across restarts) |
 | `*` | Toggle favorites filter — show only starred sessions |
 | `c` | Copy session ID to clipboard |
-| `o` | Toggle sort: by date (default) ↔ by project |
+| `o` | Toggle sort order: newest first (default) ↔ oldest first |
 | `g` | Toggle flat / grouped by project |
 | `t` | Tag / rename a session (persists across restarts) |
 | `d` | Delete a session |
@@ -80,10 +80,10 @@ npx claude-hist
 - **Auto `cd`** — opens the session in its original directory, no manual `cd` needed
 - **Color-coded dates** — green = today, yellow = 2–3 days, orange = 2 weeks, gray = older
 - **Group by project** — press `g` to group sessions by directory
-- **Tags** — press `t` to label any session; tags persist in `~/.claude/cresume-meta.json`
+- **Tags** — press `t` to label any session; tags persist in `~/.claude/chist-meta.json`
 - **Stars** — press `f` to star any session; press `*` to filter to starred only
 - **Copy ID** — press `c` to copy the session UUID to clipboard
-- **Sort toggle** — press `o` to switch between date sort and project sort
+- **Sort toggle** — press `o` to switch between newest first and oldest first
 - **Size indicator** — `S` / `M` / `L` per row based on session file size
 - **Message count** — visible in preview pane header
 - **Delete** — press `d` to remove a session, `D` to bulk-delete all sessions from a project
