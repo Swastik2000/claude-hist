@@ -167,10 +167,10 @@ function renderRow(s, isSel, grouped, W, skipPerms) {
   const label   = s.tag ? `${c.magenta(`[${s.tag}]`)} ${c.white(truncate(s.title, W - 70))}` : c.white(truncate(s.title, W - 62));
 
   if (isSel) {
-    const skipTag = skipPerms ? `${c.red('[skip-perms]')} ` : '';
-    const prefix = `  ▶  ${stripAnsi(dateStr).padEnd(16)} ${grouped ? '' : truncate(shortPath(s.cwd), 28).padEnd(30)}${s.tag ? `[${s.tag}] ` : ''}${skipPerms ? '[skip-perms] ' : ''}`;
+    const skipTag = skipPerms ? `${c.red('[dangerously-skip-permissions]')} ` : '';
+    const prefix = `  ▶  ${stripAnsi(dateStr).padEnd(16)} ${grouped ? '' : truncate(shortPath(s.cwd), 28).padEnd(30)}${s.tag ? `[${s.tag}] ` : ''}${skipPerms ? '[dangerously-skip-permissions] ' : ''}`;
     const titleRoom = Math.max(0, W - stripAnsi(prefix).length);
-    const raw = `  ▶  ${stripAnsi(dateStr).padEnd(16)} ${grouped ? '' : truncate(shortPath(s.cwd), 28).padEnd(30)}${s.tag ? `[${s.tag}] ` : ''}${skipPerms ? '[skip-perms] ' : ''}` + truncate(s.title, titleRoom);
+    const raw = `  ▶  ${stripAnsi(dateStr).padEnd(16)} ${grouped ? '' : truncate(shortPath(s.cwd), 28).padEnd(30)}${s.tag ? `[${s.tag}] ` : ''}${skipPerms ? '[dangerously-skip-permissions] ' : ''}` + truncate(s.title, titleRoom);
     return c.sel(raw.padEnd(W));
   }
   const date = padTo(dc(dateStr), grouped ? 18 : 18);
@@ -192,7 +192,7 @@ function renderList(sessions, filtered, sel, offset, query, grouped, W, mode, ta
   const statTotal   = c.gray(`${sessions.length} sessions`);
   const statMatch   = filtered.length !== sessions.length ? c.yellow(`${filtered.length} match`) : c.gray('all');
   const statGroup   = grouped ? c.cyan('[grouped]') : c.dim('[flat]');
-  const statSkip    = skipPerms ? c.red('⚠ skip-perms ON') : '';
+  const statSkip    = skipPerms ? c.red('⚠ dangerously-skip-permissions ON') : '';
   out.push(`  ${statTotal}  ${c.gray('·')}  ${statMatch}  ${c.gray('·')}  ${statGroup}${skipPerms ? `  ${c.gray('·')}  ${statSkip}` : ''}`);
   out.push(hr);
   out.push(c.dim(`     ${'DATE'.padEnd(16)} ${grouped ? '' : 'PROJECT'.padEnd(30) + ' '}TITLE`));
@@ -242,7 +242,7 @@ function renderList(sessions, filtered, sel, offset, query, grouped, W, mode, ta
   } else if (mode === 'tag') {
     out.push(`  ${c.cyan('⬧  Tag:')} ${c.white(tagInput)}${c.cyan('█')}  ${c.dim('Enter=save  Esc=cancel')}`);
   } else {
-    out.push(c.dim(`  ${c.bold('↑↓')} nav  ${c.bold('PgUp/Dn')} jump  ${c.bold('Enter')} open  ${c.bold('p')} preview  ${c.bold('d')} del  ${c.bold('t')} tag  ${c.bold('g')} group  ${c.bold('s')} ${skipPerms ? c.red('skip-perms ON') : 'skip-perms'}  ${c.bold('Esc')} quit`));
+    out.push(c.dim(`  ${c.bold('↑↓')} nav  ${c.bold('PgUp/Dn')} jump  ${c.bold('Enter')} open  ${c.bold('p')} preview  ${c.bold('d')} del  ${c.bold('t')} tag  ${c.bold('g')} group  ${c.bold('s')} ${skipPerms ? c.red('dangerously-skip-permissions ON') : 'dangerously-skip-permissions'}  ${c.bold('Esc')} quit`));
   }
   out.push('');
 
