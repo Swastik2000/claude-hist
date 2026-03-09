@@ -1,0 +1,21 @@
+{
+  "name": "claude-hist",
+  "version": "1.0.0",
+  "description": "Interactive Claude Code session browser — search, preview and resume any past session",
+  "bin": {
+    "chist": "bin/cresume.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "session",
+    "history",
+    "resume",
+    "cli",
+    "tui"
+  ],
+  "license": "MIT"
+}
