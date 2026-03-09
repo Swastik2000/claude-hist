@@ -59,6 +59,7 @@ npx claude-hist
 | `g` | Toggle flat / grouped by project |
 | `t` | Tag / rename a session (persists across restarts) |
 | `d` | Delete a session |
+| `s` | Toggle `--dangerously-skip-permissions` mode |
 | `Esc / Ctrl+C` | Quit |
 | Type anything | Filter sessions live by title, path, or tag |
 
@@ -74,6 +75,7 @@ npx claude-hist
 - **Group by project** — press `g` to group sessions by directory
 - **Tags** — press `t` to label any session; tags persist in `~/.claude/cresume-meta.json`
 - **Delete** — press `d` to remove a session with confirmation
+- **Skip permissions** — press `s` to toggle `--dangerously-skip-permissions`; shown as a red warning when active
 - **Sliding window** — htop-style 8-row scrolling view
 - **`--list` flag** — plain text output, scriptable and pipeable
 

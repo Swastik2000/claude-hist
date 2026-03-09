@@ -161,15 +161,16 @@ function buildItems(filtered, grouped) {
 }
 
 // ─── Row renderer ─────────────────────────────────────────────────────────────
-function renderRow(s, isSel, grouped, W) {
+function renderRow(s, isSel, grouped, W, skipPerms) {
   const dc      = dateColor(s.mtime);
   const dateStr = fmtDate(s.date);
   const label   = s.tag ? `${c.magenta(`[${s.tag}]`)} ${c.white(truncate(s.title, W - 70))}` : c.white(truncate(s.title, W - 62));
 
   if (isSel) {
-    const prefix = `  ▶  ${stripAnsi(dateStr).padEnd(16)} ${grouped ? '' : truncate(shortPath(s.cwd), 28).padEnd(30)}${s.tag ? `[${s.tag}] ` : ''}`;
+    const skipTag = skipPerms ? `${c.red('[skip-perms]')} ` : '';
+    const prefix = `  ▶  ${stripAnsi(dateStr).padEnd(16)} ${grouped ? '' : truncate(shortPath(s.cwd), 28).padEnd(30)}${s.tag ? `[${s.tag}] ` : ''}${skipPerms ? '[skip-perms] ' : ''}`;
     const titleRoom = Math.max(0, W - stripAnsi(prefix).length);
-    const raw = prefix + truncate(s.title, titleRoom);
+    const raw = `  ▶  ${stripAnsi(dateStr).padEnd(16)} ${grouped ? '' : truncate(shortPath(s.cwd), 28).padEnd(30)}${s.tag ? `[${s.tag}] ` : ''}${skipPerms ? '[skip-perms] ' : ''}` + truncate(s.title, titleRoom);
     return c.sel(raw.padEnd(W));
   }
   const date = padTo(dc(dateStr), grouped ? 18 : 18);
@@ -178,7 +179,7 @@ function renderRow(s, isSel, grouped, W) {
 }
 
 // ─── List pane ────────────────────────────────────────────────────────────────
-function renderList(sessions, filtered, sel, offset, query, grouped, W, mode, tagInput) {
+function renderList(sessions, filtered, sel, offset, query, grouped, W, mode, tagInput, skipPerms) {
   const hr  = c.gray('─'.repeat(W));
   const out = [];
 
@@ -191,7 +192,8 @@ function renderList(sessions, filtered, sel, offset, query, grouped, W, mode, ta
   const statTotal   = c.gray(`${sessions.length} sessions`);
   const statMatch   = filtered.length !== sessions.length ? c.yellow(`${filtered.length} match`) : c.gray('all');
   const statGroup   = grouped ? c.cyan('[grouped]') : c.dim('[flat]');
-  out.push(`  ${statTotal}  ${c.gray('·')}  ${statMatch}  ${c.gray('·')}  ${statGroup}`);
+  const statSkip    = skipPerms ? c.red('⚠ skip-perms ON') : '';
+  out.push(`  ${statTotal}  ${c.gray('·')}  ${statMatch}  ${c.gray('·')}  ${statGroup}${skipPerms ? `  ${c.gray('·')}  ${statSkip}` : ''}`);
   out.push(hr);
   out.push(c.dim(`     ${'DATE'.padEnd(16)} ${grouped ? '' : 'PROJECT'.padEnd(30) + ' '}TITLE`));
   out.push(hr);
@@ -219,7 +221,7 @@ function renderList(sessions, filtered, sel, offset, query, grouped, W, mode, ta
         out.push(`  ${c.cyan(c.bold(truncate(shortPath(item.cwd), W - 12)))}  ${c.gray(`(${item.count})`)}`);
       } else {
         const filtIdx = filtered.indexOf(item.s);
-        out.push(renderRow(item.s, filtIdx === sel, grouped, W));
+        out.push(renderRow(item.s, filtIdx === sel, grouped, W, skipPerms));
       }
       rendered++;
     }
@@ -240,7 +242,7 @@ function renderList(sessions, filtered, sel, offset, query, grouped, W, mode, ta
   } else if (mode === 'tag') {
     out.push(`  ${c.cyan('⬧  Tag:')} ${c.white(tagInput)}${c.cyan('█')}  ${c.dim('Enter=save  Esc=cancel')}`);
   } else {
-    out.push(c.dim(`  ${c.bold('↑↓')} nav  ${c.bold('PgUp/Dn')} jump  ${c.bold('Enter')} open  ${c.bold('p')} preview  ${c.bold('d')} del  ${c.bold('t')} tag  ${c.bold('g')} group  ${c.bold('Esc')} quit`));
+    out.push(c.dim(`  ${c.bold('↑↓')} nav  ${c.bold('PgUp/Dn')} jump  ${c.bold('Enter')} open  ${c.bold('p')} preview  ${c.bold('d')} del  ${c.bold('t')} tag  ${c.bold('g')} group  ${c.bold('s')} ${skipPerms ? c.red('skip-perms ON') : 'skip-perms'}  ${c.bold('Esc')} quit`));
   }
   out.push('');
 
@@ -279,13 +281,13 @@ function renderPreview(session, W) {
 }
 
 // ─── Full frame ───────────────────────────────────────────────────────────────
-function render(sessions, filtered, sel, offset, query, grouped, mode, tagInput, showPreview) {
+function render(sessions, filtered, sel, offset, query, grouped, mode, tagInput, showPreview, skipPerms) {
   const W       = process.stdout.columns || 120;
   const preview = showPreview;
   const preW    = preview ? Math.min(48, Math.floor(W * 0.37)) : 0;  // capped at 48 cols
   const listW   = preview ? W - preW - 1 : W;
 
-  const listLines = renderList(sessions, filtered, sel, offset, query, grouped, listW, mode, tagInput);
+  const listLines = renderList(sessions, filtered, sel, offset, query, grouped, listW, mode, tagInput, skipPerms);
   const prevLines = preview ? renderPreview(filtered[sel] || null, preW) : [];
   const total     = Math.max(listLines.length, prevLines.length);
   const div       = c.gray('│');
@@ -350,6 +352,7 @@ function main() {
   let offset    = 0;
   let grouped     = false;
   let showPreview = false;
+  let skipPerms   = false;
   let mode        = 'normal';  // 'normal' | 'del' | 'tag'
   let tagInput  = '';
   let delTarget = null;
@@ -361,17 +364,21 @@ function main() {
   process.stdout.write('\x1b[?1049h\x1b[?25l\x1b[H');
 
   const redraw  = () => {
-    const out = render(sessions, filtered, sel, offset, query, grouped, mode, tagInput, showPreview);
+    const out = render(sessions, filtered, sel, offset, query, grouped, mode, tagInput, showPreview, skipPerms);
     process.stdout.write('\x1b[H' + out.split('\n').map(l => l + '\x1b[K').join('\n'));
   };
   const cleanup = () => { process.stdout.write('\x1b[?25h\x1b[?1049l'); process.stdin.setRawMode(false); process.stdin.pause(); };
 
   function doResume(s) {
     cleanup();
+    const args = ['--resume', s.id];
+    if (skipPerms) args.push('--dangerously-skip-permissions');
     console.log(`\n${c.green('✓')} ${c.bold('Resuming')}  ${c.white(truncate(s.title, 60))}`);
     console.log(c.dim(`  dir      ${s.cwd}`));
-    console.log(c.dim(`  session  ${s.id}\n`));
-    const child = spawn('claude', ['--resume', s.id], { cwd: s.cwd, stdio: 'inherit' });
+    console.log(c.dim(`  session  ${s.id}`));
+    if (skipPerms) console.log(c.red(`  ⚠ --dangerously-skip-permissions enabled`));
+    console.log('');
+    const child = spawn('claude', args, { cwd: s.cwd, stdio: 'inherit' });
     child.on('error', err => {
       console.error(err.code === 'ENOENT' ? c.yellow('⚠  `claude` not found in PATH.') : 'Error: ' + err.message);
       process.exit(1);
@@ -442,6 +449,8 @@ function main() {
       grouped = !grouped;
     } else if (key.name === 'p') {
       showPreview = !showPreview;
+    } else if (key.name === 's') {
+      skipPerms = !skipPerms;
     } else if (key.name === 'backspace') {
       query = query.slice(0, -1);
       filtered = doFilter(sessions, query); sel = 0; offset = 0;
