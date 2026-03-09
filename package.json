@@ -1,9 +1,9 @@
 {
   "name": "claude-hist",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Interactive terminal session browser — search, preview and resume any past session instantly",
   "bin": {
-    "chist": "bin/cresume.js"
+    "chist": "bin/chist.js"
   },
   "engines": {
     "node": ">=16"
