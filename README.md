@@ -8,6 +8,32 @@
 
 ---
 
+## The Problem
+
+If you've ever tried to resume a past session, you've hit these walls:
+
+- **You must be in the right directory.** `--resume` only works if you `cd` into the exact project folder first. If you're somewhere else, it either fails or starts fresh.
+- **Sessions are just UUIDs.** The list shows raw IDs like `3f9a1b2c-...` — no titles, no hints, no context about what you were working on.
+- **No preview.** You have no idea what was discussed in a session until you're already inside it.
+- **Sessions feel like they disappear.** You worked on something yesterday, but you can't find it because there's no search, no filter, no way to tell sessions apart.
+- **No timestamps or recency.** You can't tell which session was from today vs last week.
+- **No project context.** When you have sessions across multiple projects, there's no way to see which session belongs to which folder.
+- **Tagging is impossible.** There's no way to label or name a session for later reference.
+
+`claude-hist` solves all of this from a single command.
+
+---
+
+## What It Does
+
+```bash
+chist
+```
+
+Launches a full terminal UI that shows all your sessions across every project — with titles, timestamps, project paths, and a live search filter. Press `Enter` to jump straight in, regardless of which directory you're currently in.
+
+---
+
 ## Install
 
 ```bash
@@ -22,49 +48,43 @@ npx claude-hist
 
 ---
 
-## Usage
-
-```bash
-chist
-```
-
-Launches an interactive TUI to browse all your sessions.
-
-### Flags
-
-```bash
-chist --list        # plain text output, no TUI
-chist --list --ids  # include session UUIDs in output
-```
-
----
-
 ## Keys
 
 | Key | Action |
 |-----|--------|
 | `↑ / ↓` | Navigate sessions |
 | `PgUp / PgDn` | Jump 8 rows |
-| `Enter` | Open selected session |
-| `p` | Toggle preview pane |
+| `Enter` | Open selected session (auto `cd` to correct directory) |
+| `p` | Toggle preview pane — see the first few messages |
 | `g` | Toggle flat / grouped by project |
-| `t` | Tag / rename a session |
+| `t` | Tag / rename a session (persists across restarts) |
 | `d` | Delete a session |
 | `Esc / Ctrl+C` | Quit |
-| Type anything | Filter sessions live |
+| Type anything | Filter sessions live by title, path, or tag |
 
 ---
 
 ## Features
 
-- **Live search** — filter sessions by title, project path, or tag
-- **Preview pane** — press `p` to peek at the first few messages
-- **Color-coded dates** — green = today, yellow = recent, gray = old
+- **Titles instead of UUIDs** — shows the first message as the session title
+- **Live search** — filter by title, project path, or tag instantly
+- **Preview pane** — press `p` to see the first few message exchanges before opening
+- **Auto `cd`** — opens the session in its original directory, no manual `cd` needed
+- **Color-coded dates** — green = today, yellow = 2–3 days, orange = 2 weeks, gray = older
 - **Group by project** — press `g` to group sessions by directory
-- **Tags** — press `t` to label any session; tags persist across restarts
+- **Tags** — press `t` to label any session; tags persist in `~/.claude/cresume-meta.json`
 - **Delete** — press `d` to remove a session with confirmation
-- **Sliding window** — htop-style 8-row view, no full-screen flicker
-- **Instant resume** — Enter opens the session in the correct directory
+- **Sliding window** — htop-style 8-row scrolling view
+- **`--list` flag** — plain text output, scriptable and pipeable
+
+---
+
+## Flags
+
+```bash
+chist --list        # plain text, no TUI — good for scripting
+chist --list --ids  # include session UUIDs in output
+```
 
 ---
 
