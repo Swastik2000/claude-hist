@@ -36,7 +36,7 @@ const safePath = (p, base) => {
 };
 
 // ─── Metadata / Tags ──────────────────────────────────────────────────────────
-const META_FILE = path.join(os.homedir(), '.claude', 'cresume-meta.json');
+const META_FILE = path.join(os.homedir(), '.claude', 'chist-meta.json');
 const loadMeta  = () => { try { return JSON.parse(fs.readFileSync(META_FILE, 'utf8')); } catch { return {}; } };
 const saveMeta  = m  => fs.writeFileSync(META_FILE, JSON.stringify(m, null, 2), 'utf8');
 
@@ -215,7 +215,11 @@ function applyFilters(sessions, query, filterFavs, sortBy) {
       (s.tag && s.tag.toLowerCase().includes(ql))
     );
   }
-  if (sortBy === 'project') result.sort((a, b) => a.cwd.localeCompare(b.cwd) || b.mtime - a.mtime);
+  // 'date-desc' = default (sessions already in mtime-desc order from loadSessions)
+  // 'date-asc'  = reverse: oldest sessions first
+  // 'project'   = alphabetical by cwd, then mtime-desc within each project
+  if (sortBy === 'date-asc')  result.sort((a, b) => a.mtime - b.mtime);
+  if (sortBy === 'project')   result.sort((a, b) => a.cwd.localeCompare(b.cwd) || b.mtime - a.mtime);
   return result;
 }
 
@@ -266,21 +270,30 @@ function renderRow(s, isSel, grouped, W, skipPerms) {
 
 // ─── List pane ────────────────────────────────────────────────────────────────
 function renderList(sessions, filtered, sel, offset, query, grouped, W, mode, tagInput,
-                    skipPerms, filterFavs, sortBy, statusMsg, updateAvailable, delTarget) {
+                    skipPerms, filterFavs, sortBy, statusMsg, updateAvailable, delTarget, searchMode) {
   const hr  = c.gray('─'.repeat(W));
   const out = [];
 
   out.push('');
   out.push(`  ${c.purple(c.bold('◆  Claude Session Picker'))}  ${c.gray('v' + require('../package.json').version)}`);
   out.push('');
-  out.push(`  ${c.cyan('❯')} ${c.bold('Search')}  ${query ? c.white(query) + c.cyan('█') : c.dim('type to filter…')}`);
+  // Search mode (after pressing /): cursor visible, hint shown
+  // Normal mode with query: query shown dimly, '/ to edit' hint
+  // Normal mode empty: just the '/ to search' hint
+  if (searchMode) {
+    out.push(`  ${c.cyan('❯')} ${c.bold(c.cyan('Search'))}  ${c.white(query)}${c.cyan('█')}  ${c.dim('Esc=done')}`);
+  } else if (query) {
+    out.push(`  ${c.cyan('❯')} ${c.bold('Search')}  ${c.white(query)}  ${c.dim('/ to edit')}`);
+  } else {
+    out.push(`  ${c.gray('❯')} ${c.dim('Search')}  ${c.dim('press / to search')}`);
+  }
   out.push('');
 
   // Status bar: total · match · group · sort · [favs] · [skip-perms warning]
   const statTotal = c.gray(`${sessions.length} sessions`);
   const statMatch = filtered.length !== sessions.length ? c.yellow(`${filtered.length} match`) : c.gray('all');
-  const statGroup = grouped   ? c.cyan('[grouped]')    : c.dim('[flat]');
-  const statSort  = sortBy === 'project' ? c.cyan('[by project]') : c.dim('[by date]');
+  const statGroup = grouped ? c.cyan('[grouped]') : c.dim('[flat]');
+  const statSort  = sortBy === 'date-asc' ? c.cyan('[oldest first]') : sortBy === 'project' ? c.cyan('[by project]') : c.dim('[newest first]');
   let statLine = `  ${statTotal}  ${c.gray('·')}  ${statMatch}  ${c.gray('·')}  ${statGroup}  ${c.gray('·')}  ${statSort}`;
   if (filterFavs) statLine += `  ${c.gray('·')}  ${c.yellow('[★ favs only]')}`;
   if (skipPerms)  statLine += `  ${c.gray('·')}  ${c.red('⚠ dangerously-skip-permissions ON')}`;
@@ -343,7 +356,7 @@ function renderList(sessions, filtered, sel, offset, query, grouped, W, mode, ta
     out.push(`  ${c.green('✓')} ${c.white(statusMsg)}`);
   } else {
     // Two-line footer so all keys fit without overflowing narrow terminals
-    out.push(c.dim(`  ${c.bold('↑↓')} nav  ${c.bold('PgUp/Dn')} jump  ${c.bold('Enter')} open  ${c.bold('p')} preview  ${c.bold('f')} star  ${c.bold('*')} favs  ${c.bold('c')} copy-id  ${c.bold('o')} sort`));
+    out.push(c.dim(`  ${c.bold('↑↓')} nav  ${c.bold('PgUp/Dn')} jump  ${c.bold('Enter')} open  ${c.bold('p')} preview  ${c.bold('f')} star  ${c.bold('*')} favs  ${c.bold('c')} copy-id  ${c.bold('o')} ${sortBy === 'date-asc' ? c.cyan('oldest first') : 'newest↔oldest'}`));
     out.push(c.dim(`  ${c.bold('d')} del  ${c.bold('D')} bulk-del  ${c.bold('t')} tag  ${c.bold('g')} group  ${c.bold('s')} ${skipPerms ? c.red('dangerously-skip-permissions ON') : 'dangerously-skip-permissions'}  ${c.bold('Esc')} quit`));
   }
 
@@ -392,13 +405,13 @@ function renderPreview(session, W) {
 
 // ─── Full frame ───────────────────────────────────────────────────────────────
 function render(sessions, filtered, sel, offset, query, grouped, mode, tagInput,
-                showPreview, skipPerms, filterFavs, sortBy, statusMsg, updateAvailable, delTarget) {
+                showPreview, skipPerms, filterFavs, sortBy, statusMsg, updateAvailable, delTarget, searchMode) {
   const W     = process.stdout.columns || 120;
   const preW  = showPreview ? Math.min(48, Math.floor(W * 0.37)) : 0;
   const listW = showPreview ? W - preW - 1 : W;
 
   const listLines = renderList(sessions, filtered, sel, offset, query, grouped, listW, mode, tagInput,
-                               skipPerms, filterFavs, sortBy, statusMsg, updateAvailable, delTarget);
+                               skipPerms, filterFavs, sortBy, statusMsg, updateAvailable, delTarget, searchMode);
   const prevLines = showPreview ? renderPreview(filtered[sel] || null, preW) : [];
   const total     = Math.max(listLines.length, prevLines.length);
   const div       = c.gray('│');
@@ -463,8 +476,9 @@ function main() {
 
   let sessions       = allSess;
   let query          = '';
+  let searchMode     = false;   // true = '/' was pressed, all keys go to search
   let filterFavs     = false;
-  let sortBy         = 'date';          // 'date' | 'project'
+  let sortBy         = 'date-desc';     // 'date-desc' | 'date-asc' | 'project'
   let filtered       = applyFilters(sessions, query, filterFavs, sortBy);
   let sel            = 0;
   let offset         = 0;
@@ -486,8 +500,10 @@ function main() {
 
   const redraw = () => {
     const out = render(sessions, filtered, sel, offset, query, grouped, mode, tagInput,
-                       showPreview, skipPerms, filterFavs, sortBy, statusMsg, updateAvailable, delTarget);
-    process.stdout.write('\x1b[H' + out.split('\n').map(l => l + '\x1b[K').join('\n'));
+                       showPreview, skipPerms, filterFavs, sortBy, statusMsg, updateAvailable, delTarget, searchMode);
+    // \x1b[K clears each line to end-of-line, \x1b[J clears everything below
+    // the last written line — prevents ghost lines when results shrink
+    process.stdout.write('\x1b[H' + out.split('\n').map(l => l + '\x1b[K').join('\n') + '\x1b[J');
   };
   const cleanup = () => {
     process.stdout.write('\x1b[?25h\x1b[?1049l');
@@ -593,15 +609,38 @@ function main() {
 
     // ── tag input ──
     if (mode === 'tag') {
-      if (key.name === 'return')     doSaveTag(filtered[sel], tagInput);
+      if (key.name === 'return')      doSaveTag(filtered[sel], tagInput);
       else if (key.name === 'escape') { mode = 'normal'; tagInput = ''; }
       else if (key.name === 'backspace') tagInput = tagInput.slice(0, -1);
       else if (str && !key.ctrl && !key.meta && str.length === 1 && str.charCodeAt(0) >= 32) tagInput += str;
       redraw(); return;
     }
 
-    // ── normal ──
-    if ((key.ctrl && key.name === 'c') || key.name === 'escape') { cleanup(); process.exit(0); }
+    // ── search mode (press / to enter, Esc to exit) ──
+    // All printable keys go to the query — no hotkey conflicts.
+    if (searchMode) {
+      if (key.name === 'escape' || key.name === 'return') {
+        searchMode = false;  // exit search mode, keep query as active filter
+      } else if (key.name === 'backspace') {
+        query = query.slice(0, -1);
+        filtered = applyFilters(sessions, query, filterFavs, sortBy);
+        sel = 0; offset = 0;
+      } else if (str && !key.ctrl && !key.meta && str.length === 1 && str.charCodeAt(0) >= 32) {
+        query += str;
+        filtered = applyFilters(sessions, query, filterFavs, sortBy);
+        sel = 0; offset = 0;
+      }
+      redraw(); return;
+    }
+
+    // ── normal mode ──
+    if (key.ctrl && key.name === 'c') { cleanup(); process.exit(0); }
+    // Esc in normal mode: clear search if active, otherwise quit
+    if (key.name === 'escape') {
+      if (query) { query = ''; filtered = applyFilters(sessions, query, filterFavs, sortBy); sel = 0; offset = 0; }
+      else { cleanup(); process.exit(0); }
+      redraw(); return;
+    }
     if (key.name === 'return' && filtered.length) { doResume(filtered[sel]); return; }
 
     if (key.name === 'up') {
@@ -614,11 +653,11 @@ function main() {
     } else if (key.name === 'pagedown') {
       sel    = Math.min(filtered.length - 1, sel + ROWS);
       offset = Math.min(Math.max(0, filtered.length - ROWS), offset + ROWS);
+    } else if (str === '/') {
+      searchMode = true;  // enter search mode — all subsequent keys go to query
     } else if (str === 'd' && filtered.length) {
-      // str === 'd' catches only lowercase — str === 'D' is the bulk-delete key
       mode = 'del'; delTarget = filtered[sel];
     } else if (str === 'D' && filtered.length) {
-      // Uppercase D for bulk delete — harder to press accidentally than lowercase
       mode = 'bulkdel'; delTarget = filtered[sel].cwd;
     } else if (str === 't' && filtered.length) {
       mode = 'tag'; tagInput = filtered[sel].tag || '';
@@ -631,22 +670,19 @@ function main() {
     } else if (key.name === 'f' && filtered.length) {
       doToggleStar(filtered[sel]);
     } else if (str === '*') {
-      // str === '*' is more reliable than key.name for this character across terminals
       filterFavs = !filterFavs;
       filtered = applyFilters(sessions, query, filterFavs, sortBy);
       sel = 0; offset = 0;
     } else if (key.name === 'c' && filtered.length) {
       doCopyId(filtered[sel]);
     } else if (key.name === 'o') {
-      sortBy = sortBy === 'date' ? 'project' : 'date';
+      sortBy = sortBy === 'date-desc' ? 'date-asc' : 'date-desc';
+      grouped = false;
       filtered = applyFilters(sessions, query, filterFavs, sortBy);
       sel = 0; offset = 0;
     } else if (key.name === 'backspace') {
+      // Allow backspace outside search mode for quick query corrections
       query = query.slice(0, -1);
-      filtered = applyFilters(sessions, query, filterFavs, sortBy);
-      sel = 0; offset = 0;
-    } else if (str && !key.ctrl && !key.meta && str.length === 1 && str.charCodeAt(0) >= 32) {
-      query += str;
       filtered = applyFilters(sessions, query, filterFavs, sortBy);
       sel = 0; offset = 0;
     }

@@ -66,7 +66,9 @@ npx claude-hist
 | `D` | Bulk delete — remove all sessions from this project |
 | `s` | Toggle `--dangerously-skip-permissions` mode |
 | `Esc / Ctrl+C` | Quit |
-| Type anything | Filter sessions live by title, path, or tag |
+| `/` | Enter search mode — type freely without triggering hotkeys |
+| `Esc` (in search) | Exit search mode, keep filter active |
+| `Esc` (normal) | Clear search filter, or quit if already empty |
 
 ---
 
