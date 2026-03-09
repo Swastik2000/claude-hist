@@ -1,6 +1,6 @@
 # claude-hist
 
-> Interactive terminal session browser — search, preview, and jump back into any past session instantly.
+> Interactive terminal UI for browsing, searching, and resuming **Claude Code** sessions — from any directory, instantly.
 
 ![npm](https://img.shields.io/npm/v/claude-hist)
 ![license](https://img.shields.io/npm/l/claude-hist)
@@ -10,7 +10,7 @@
 
 ## The Problem
 
-If you've ever tried to resume a past session, you've hit these walls:
+**claude-hist** is a CLI tool for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) users. If you've ever tried to resume a past Claude Code session, you've hit these walls:
 
 - **You must be in the right directory.** `--resume` only works if you `cd` into the exact project folder first. If you're somewhere else, it either fails or starts fresh.
 - **Sessions are just UUIDs.** The list shows raw IDs like `3f9a1b2c-...` — no titles, no hints, no context about what you were working on.

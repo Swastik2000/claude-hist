@@ -1,7 +1,7 @@
 {
   "name": "claude-hist",
-  "version": "1.3.1",
-  "description": "Interactive terminal session browser — search, preview and resume any past session instantly",
+  "version": "1.3.2",
+  "description": "Interactive terminal UI for browsing, searching, and resuming Claude Code sessions — from any directory, instantly",
   "bin": {
     "chist": "bin/chist.js"
   },

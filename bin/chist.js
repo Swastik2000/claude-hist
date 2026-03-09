@@ -173,14 +173,26 @@ function sizeLabel(fsize) {
   return c.red('L');
 }
 
+function isToday(date) {
+  const now = new Date();
+  return date.getFullYear() === now.getFullYear() &&
+         date.getMonth()    === now.getMonth()    &&
+         date.getDate()     === now.getDate();
+}
+function isYesterday(date) {
+  const yest = new Date(); yest.setDate(yest.getDate() - 1);
+  return date.getFullYear() === yest.getFullYear() &&
+         date.getMonth()    === yest.getMonth()    &&
+         date.getDate()     === yest.getDate();
+}
 function dateColor(mtime) {
   const d = (Date.now() - mtime) / 86400000;
-  return d < 1 ? c.green : d < 3 ? c.yellow : d < 14 ? c.orange : c.gray;
+  return isToday(new Date(mtime)) ? c.green : d < 3 ? c.yellow : d < 14 ? c.orange : c.gray;
 }
 function fmtDate(date) {
   const d = (Date.now() - date) / 86400000;
-  if (d < 1)   return 'today ' + date.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
-  if (d < 2)   return 'yesterday';
+  if (isToday(date))     return 'today ' + date.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
+  if (isYesterday(date)) return 'yesterday';
   if (d < 7)   return `${Math.floor(d)}d ago`;
   if (d < 365) return date.toLocaleDateString('en', { month: 'short', day: 'numeric' });
   return date.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' });
