@@ -61,7 +61,7 @@ npx claude-hist
 | `c` | Copy session ID to clipboard |
 | `o` | Toggle sort: by date (default) ↔ by project |
 | `g` | Toggle flat / grouped by project |
-| `t` | Tag / rename a session |
+| `t` | Tag / rename a session (persists across restarts) |
 | `d` | Delete a session |
 | `D` | Bulk delete — remove all sessions from this project |
 | `s` | Toggle `--dangerously-skip-permissions` mode |
